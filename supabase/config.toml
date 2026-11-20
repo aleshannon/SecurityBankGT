@@ -1,0 +1,19 @@
+project_id = "securitybankgt"
+
+[functions.login]
+verify_jwt = false
+
+[functions.otp-generate]
+verify_jwt = true
+
+[functions.otp-verify]
+verify_jwt = true
+
+[functions.password-hook]
+verify_jwt = false
+
+[functions.signup]
+verify_jwt = false
+
+[functions.transfer]
+verify_jwt = true
