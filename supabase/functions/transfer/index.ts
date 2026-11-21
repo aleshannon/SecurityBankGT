@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { deliverCode, otpCode, sha256 } from '../_shared/mail.ts'
+import { codigoEnPantalla, cuentaDeClase, deliverCode, otpCode, sha256 } from '../_shared/mail.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -33,11 +33,15 @@ Deno.serve(async (req) => {
     if (error) return json({ error: error.message }, 400)
     if (data && typeof data === 'object' && 'error' in data && data.error) return json({ error: data.error }, 400)
     if (data && typeof data === 'object' && data.tipo === 'requiere_otp') {
-      const reveal = Deno.env.get('DEMO_REVEAL_OTP') === 'true'
-      try {
-        await deliverCode(auth.user.email ?? '', code, 'Úselo para confirmar la transferencia mayor a Q10,000.')
-      } catch {
-        if (!reveal) return json({ error: 'No se pudo enviar el código de la transferencia.' }, 502)
+      const correo = auth.user.email ?? ''
+      const reveal = codigoEnPantalla(correo)
+      if (!cuentaDeClase(correo)) {
+        try {
+          await deliverCode(correo, code, 'Úselo para confirmar la transferencia mayor a Q10,000.')
+        } catch (error) {
+          console.error('correo', error instanceof Error ? error.message : 'fallo')
+          if (!reveal) return json({ error: 'No se pudo enviar el código de la transferencia.' }, 502)
+        }
       }
       return json({
         tipo: 'requiere_otp',

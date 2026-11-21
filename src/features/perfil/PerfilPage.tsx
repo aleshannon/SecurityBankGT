@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api'
 import { errorText } from '@/domain/errors'
@@ -10,8 +9,7 @@ import { useToast } from '@/components/toast'
 import { Button, Field, PageHeader, Panel, PasswordMeter, TextInput } from '@/components/ui'
 
 export function PerfilPage() {
-  const { session, signOut } = useAuth()
-  const navigate = useNavigate()
+  const { session } = useAuth()
   const toast = useToast()
   const cliente = useQuery({ queryKey: ['mi-cliente', session.clienteId], queryFn: () => api.getCliente(session.clienteId ?? ''), enabled: Boolean(session.clienteId) })
   const [actual, setActual] = useState('')
@@ -56,13 +54,6 @@ export function PerfilPage() {
           <Button type="submit">Actualizar</Button>
         </form>
       </Panel>
-      {session.role === 'admin' ? (
-        <Panel className="mt-4">
-          <h2 className="font-semibold">Restablecer demostración</h2>
-          <p className="mt-1 text-sm text-muted">Vuelve a cargar los datos ficticios y cierra la sesión.</p>
-          <Button className="mt-3" tone="danger" onClick={() => void api.restablecerDemo().then(() => signOut('Datos de demostración restablecidos.')).then(() => navigate('/login'))}>Restablecer</Button>
-        </Panel>
-      ) : null}
     </div>
   )
 }

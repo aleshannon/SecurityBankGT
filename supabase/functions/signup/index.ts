@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     await admin.from('profiles').update({ nombre: `${nombre} ${apellidos}`, telefono }).eq('user_id', userId)
     const { data: staff } = await admin.from('user_roles').select('user_id').in('role', ['admin', 'ejecutivo'])
     if (staff?.length) {
-      await admin.from('notificaciones').insert(staff.map((row) => ({
+      await admin.from('notificaciones').insert(staff.map((row: { user_id: string }) => ({
         user_id: row.user_id,
         tipo: 'kyc',
         titulo: 'KYC pendiente',

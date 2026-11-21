@@ -49,6 +49,38 @@ Deno.serve(async (req) => {
     await admin.from('otp_challenges').update({ used: true }).eq('id', challenge.id)
     if (purpose !== 'transfer') {
       await admin.from('mfa_sessions').update({ verified: true, last_activity: new Date().toISOString() }).eq('user_id', auth.user.id)
+      const { data: mfa } = await admin.from('mfa_sessions').select('pais, ip, dispositivo').eq('user_id', auth.user.id).maybeSingle()
+      const { data: profile } = await admin.from('profiles').select('pais_habitual, email').eq('user_id', auth.user.id).maybeSingle()
+      const habitual = profile?.pais_habitual ?? 'GT'
+      if (mfa?.pais && mfa.pais !== habitual) {
+        await admin.from('security_events').insert({
+          tipo: 'pais_diferente',
+          severidad: 'alta',
+          descripcion: 'El acceso se observó desde un país distinto al habitual.',
+          user_id: auth.user.id,
+          ip: mfa.ip || '',
+          pais: mfa.pais,
+          dispositivo: mfa.dispositivo || 'Navegador web',
+        })
+        const correo = profile?.email ?? auth.user.email ?? 'un usuario'
+        await admin.from('notificaciones').insert({
+          user_id: auth.user.id,
+          tipo: 'dispositivo',
+          titulo: 'Acceso desde otro país',
+          mensaje: `Se registró un acceso desde ${mfa.pais}.`,
+          severidad: 'alta',
+        })
+        const { data: staff } = await admin.from('user_roles').select('user_id').in('role', ['admin', 'auditor_seguridad'])
+        if (staff?.length) {
+          await admin.from('notificaciones').insert(staff.map((row: { user_id: string }) => ({
+            user_id: row.user_id,
+            tipo: 'dispositivo',
+            titulo: 'Acceso desde otro país',
+            mensaje: `${correo} ingresó desde ${mfa.pais}.`,
+            severidad: 'alta',
+          })))
+        }
+      }
     }
     return json({ ok: true })
   } catch {

@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { deliverCode, otpCode, sha256 } from '../_shared/mail.ts'
+import { codigoEnPantalla, cuentaDeClase, deliverCode, otpCode, sha256 } from '../_shared/mail.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -30,11 +30,15 @@ Deno.serve(async (req) => {
       code_hash: await sha256(code),
       expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
     })
-    const reveal = Deno.env.get('DEMO_REVEAL_OTP') === 'true'
-    try {
-      await deliverCode(auth.user.email ?? '', code, 'Úselo para terminar de ingresar.')
-    } catch {
-      if (!reveal) return json({ error: 'No se pudo enviar el código. Configure el correo del proyecto.' }, 502)
+    const correo = auth.user.email ?? ''
+    const reveal = codigoEnPantalla(correo)
+    if (!cuentaDeClase(correo)) {
+      try {
+        await deliverCode(correo, code, 'Úselo para terminar de ingresar.')
+      } catch (error) {
+        console.error('correo', error instanceof Error ? error.message : 'fallo')
+        if (!reveal) return json({ error: 'No se pudo enviar el código. Configure el correo del proyecto.' }, 502)
+      }
     }
     return json({
       email: auth.user.email,

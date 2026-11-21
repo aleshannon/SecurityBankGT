@@ -74,7 +74,7 @@ export function MfaPage() {
               inputMode="numeric"
               autoComplete={index === 0 ? 'one-time-code' : 'off'}
               aria-label={`Dígito ${index + 1}`}
-              className="h-14 w-12 rounded-xl border border-line bg-surface text-center text-xl"
+              className={`h-14 w-12 rounded-2xl border bg-surface text-center text-xl font-semibold text-ink shadow-[0_1px_2px_rgba(11,37,69,0.06),0_6px_16px_rgba(11,37,69,0.04)] outline-none transition duration-150 hover:border-accent/55 focus:border-accent focus:shadow-[0_0_0_4px_rgba(19,168,158,0.18)] ${digit ? 'border-accent' : 'border-[#c9d7e4] dark:border-line'}`}
               value={digit}
               onChange={(event) => update(index, event.target.value)}
             />

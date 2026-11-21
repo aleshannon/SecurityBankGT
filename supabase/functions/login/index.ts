@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { deliverCode, otpCode, sha256 } from '../_shared/mail.ts'
+import { codigoEnPantalla, cuentaDeClase, deliverCode, otpCode, sha256 } from '../_shared/mail.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -12,8 +12,9 @@ function json(body: unknown, status = 200) {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+  if (req.method === 'GET') return json({ reveal: Deno.env.get('DEMO_REVEAL_OTP') === 'true' })
   try {
-    const { email, password, device } = await req.json()
+    const { email, password, device, simulateForeign } = await req.json()
     if (typeof email !== 'string' || typeof password !== 'string') {
       return json({ error: 'No se pudo iniciar sesión.' }, 400)
     }
@@ -26,7 +27,7 @@ Deno.serve(async (req) => {
     if ((count ?? 0) >= 8) return json({ error: 'Demasiados intentos. Espere unos minutos.' }, 429)
 
     const { data: userRow } = await admin.auth.admin.listUsers()
-    const match = userRow.users.find((user) => user.email?.toLowerCase() === email.toLowerCase())
+    const match = userRow.users.find((user: { email?: string }) => user.email?.toLowerCase() === email.toLowerCase())
     if (match) {
       const { data: lock } = await admin.from('account_locks').select('until').eq('user_id', match.id).maybeSingle()
       if (lock && new Date(lock.until).getTime() > Date.now()) {
@@ -36,7 +37,9 @@ Deno.serve(async (req) => {
 
     const publicClient = createClient(url, anon)
     const signed = await publicClient.auth.signInWithPassword({ email, password })
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '190.56.10.10'
+    const simularPais = simulateForeign === true && Deno.env.get('DEMO_REVEAL_OTP') === 'true'
+    const pais = simularPais ? 'US' : 'GT'
+    const ip = simularPais ? '104.28.22.14' : (req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '190.56.10.10')
     const dispositivo = typeof device === 'string' ? device.slice(0, 180) : 'Navegador web'
     await admin.from('login_attempts').insert({
       email: email.toLowerCase(),
@@ -62,7 +65,7 @@ Deno.serve(async (req) => {
           await admin.from('account_locks').upsert({ user_id: match.id, until: new Date(Date.now() + 15 * 60 * 1000).toISOString(), reason: 'Cinco intentos fallidos.' })
           await admin.from('security_events').insert({
             tipo: 'login_fallido', severidad: 'alta', descripcion: 'La cuenta se bloqueó tras cinco intentos fallidos.',
-            user_id: match.id, ip, pais: 'GT', dispositivo,
+            user_id: match.id, ip, pais, dispositivo,
           })
         }
       }
@@ -77,11 +80,14 @@ Deno.serve(async (req) => {
       code_hash: codeHash,
       expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
     })
-    const reveal = Deno.env.get('DEMO_REVEAL_OTP') === 'true'
-    try {
-      await deliverCode(email, code, 'Úselo para terminar de ingresar.')
-    } catch {
-      if (!reveal) return json({ error: 'No se pudo enviar el código. Configure el correo del proyecto.' }, 502)
+    const reveal = codigoEnPantalla(email)
+    if (!cuentaDeClase(email)) {
+      try {
+        await deliverCode(email, code, 'Úselo para terminar de ingresar.')
+      } catch (error) {
+        console.error('correo', error instanceof Error ? error.message : 'fallo')
+        if (!reveal) return json({ error: 'No se pudo enviar el código. Configure el correo del proyecto.' }, 502)
+      }
     }
     await admin.from('mfa_sessions').upsert({
       user_id: signed.data.user.id,
@@ -89,12 +95,12 @@ Deno.serve(async (req) => {
       last_activity: new Date().toISOString(),
       ip,
       dispositivo,
-      pais: 'GT',
+      pais,
     })
     return json({
       email,
       expiresAt: Date.now() + 5 * 60 * 1000,
-      demoCode: Deno.env.get('DEMO_REVEAL_OTP') === 'true' ? code : '',
+      demoCode: reveal ? code : '',
       session: signed.data.session,
     })
   } catch {

@@ -137,7 +137,7 @@ begin
       '190.56.' || (n_tx % 40)::text || '.' || (10 + n_tx % 200)::text,
       'Navegador web',
       now() - ((n_tx % 90) || ' days')::interval - ((n_tx % 20) || ' hours')::interval,
-      'seed-' || n_tx::text,
+      'seed-' || lpad(n_tx::text, 4, '0'),
       admin_id,
       case when n_tx % 30 = 0 then 'Rechazada en la semilla de demostración.' else null end
     );
@@ -160,7 +160,13 @@ begin
     values (
       case i % 5 when 0 then 'login_fallido' when 1 then 'dispositivo_nuevo' when 2 then 'transferencia_inusual' when 3 then 'acceso_no_autorizado' else 'pais_diferente' end,
       case i % 4 when 0 then 'critica' when 1 then 'alta' when 2 then 'media' else 'baja' end,
-      'Evento de demostración ' || i::text || '. No corresponde a un incidente real.',
+      case i % 5
+        when 0 then 'Se acumuló una serie de intentos de acceso fallidos.'
+        when 1 then 'El acceso provino de un dispositivo que no estaba marcado como de confianza.'
+        when 2 then 'El patrón de la transferencia se apartó del uso habitual de la cuenta.'
+        when 3 then 'Se intentó consultar un registro fuera del alcance del rol.'
+        else 'El acceso se observó desde un país distinto al habitual.'
+      end,
       case when i % 2 = 0 then cliente_user else admin_id end,
       '190.56.9.' || i::text,
       case when i % 6 = 0 then 'US' else 'GT' end,

@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { passwordStrength } from '@/domain/format'
 
-export const fieldClass = 'w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition focus:border-accent'
+export const fieldClass = 'w-full rounded-xl border border-[#c9d7e4] bg-surface px-3.5 py-2.5 text-sm text-ink shadow-[0_1px_2px_rgba(11,37,69,0.06),0_6px_16px_rgba(11,37,69,0.04)] outline-none transition duration-150 placeholder:text-muted/70 hover:border-accent/55 focus:border-accent focus:shadow-[0_0_0_4px_rgba(19,168,158,0.18)] disabled:cursor-not-allowed disabled:bg-canvas disabled:opacity-70 dark:border-line'
 
 const tones = {
   ok: 'bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-100 dark:ring-emerald-900',

@@ -31,7 +31,7 @@ Después del correo y la contraseña, el portal pide un OTP de 6 dígitos. En el
 2. Aplique, en orden, los archivos de `supabase/migrations`.
 3. Despliegue las funciones `login`, `otp-generate`, `otp-verify`, `password-hook`, `signup` y `transfer`.
 4. Guarde `SUPABASE_SERVICE_ROLE_KEY` como secreto de las funciones. No lo ponga en el frontend.
-5. Para enviar el código, agregue `RESEND_API_KEY` y `MAIL_FROM`, o `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` y `MAIL_FROM`. No active `DEMO_REVEAL_OTP` si el código debe ir solo por correo.
+5. Para enviar el código, agregue `RESEND_API_KEY` y `MAIL_FROM`. El plan gratis de Resend solo entrega al correo de esa cuenta. No active `DEMO_REVEAL_OTP` si el código debe ir solo por correo.
 6. Copie `.env.example` a `.env` y complete `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
 7. En Authentication, desactive la confirmación de correo: el segundo factor del portal es el código de 6 dígitos.
 8. Active el hook de contraseña apuntando a `password-hook`.

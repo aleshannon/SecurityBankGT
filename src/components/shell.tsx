@@ -93,7 +93,7 @@ export function Shell() {
         <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur">
           <div className="flex items-center gap-2">
             <button type="button" className="rounded-lg p-2 lg:hidden" onClick={() => setOpen(true)} aria-label="Abrir menú"><Menu className="h-5 w-5" /></button>
-            <p className="hidden text-sm text-muted sm:block">Entorno de demostración · datos ficticios · {modoDatos === 'supabase' ? 'Supabase' : 'motor local'}</p>
+            <p className="hidden text-sm text-muted sm:block">{modoDatos === 'supabase' ? 'Conectado a Supabase' : 'Entorno de demostración · motor local'}</p>
           </div>
           <div className="flex items-center gap-2">
             <button type="button" className="rounded-lg p-2" onClick={toggleTheme} aria-label={dark ? 'Activar modo claro' : 'Activar modo oscuro'}>
